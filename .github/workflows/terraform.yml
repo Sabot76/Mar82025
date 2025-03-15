@@ -24,9 +24,6 @@ jobs:
       - name: Run terraform fmt
         run: terraform fmt -check
 
-      - name: Validate Terraform Configuration
-        run: terraform validate
-
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v3
         with:
@@ -36,6 +33,9 @@ jobs:
 
       - name: Initialize Terraform
         run: terraform init
+
+      - name: Validate Terraform Configuration
+        run: terraform validate
 
       - name: Run Terraform Plan
         run: terraform plan
