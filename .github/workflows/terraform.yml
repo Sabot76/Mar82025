@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - main  # Make sure this matches your repo's default branch
+      - main  # Adjust if your default branch is different
 
 permissions:
   id-token: write  # Needed for OIDC authentication
@@ -47,8 +47,11 @@ jobs:
       - name: Initialize Terraform
         run: terraform init
 
+      - name: Validate Terraform Configuration
+        run: terraform validate
+
       - name: Run Terraform Plan
-        run: terraform plan
+        run: terraform plan -out=tfplan
 
   terraform-apply:
     name: Terraform Apply
@@ -73,4 +76,4 @@ jobs:
         run: terraform init
 
       - name: Apply Terraform Changes
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve tfplan
