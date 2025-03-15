@@ -24,10 +24,7 @@ This project focuses on setting up an AWS infrastructure using Terraform, ensuri
   - AmazonEventBridgeFullAccess
 - Configured MFA (Multi-Factor Authentication) for both the root user and the new IAM user.
 - Generated AWS access keys for CLI authentication.
-- Configured AWS CLI to use the new user’s credentials and verified access by running:
-  ```sh
-  aa
-  ```
+- Configured AWS CLI to use the new user’s credentials and verified access.
 
 ### 3. Created an S3 Bucket for Terraform State
 
@@ -65,10 +62,15 @@ This project focuses on setting up an AWS infrastructure using Terraform, ensuri
 ### 5. Automated Terraform Deployment with GitHub Actions
 
 - Created a GitHub repository to store Terraform code.
-- Defined a GitHub Actions workflow to handle infrastructure deployment:
-  - **terraform-check:** Runs `terraform fmt` to ensure code formatting.
-  - **terraform-plan:** Runs `terraform plan` to preview changes.
-  - **terraform-apply:** Runs `terraform apply` to deploy the changes.
+- Defined a GitHub Actions workflow to handle infrastructure deployment in a single job:
+  - **Checkout Code:** Uses `actions/checkout@v4` to pull the latest code.
+  - **Install Terraform:** Uses `hashicorp/setup-terraform@v3`.
+  - **Format Check:** Runs `terraform fmt -check`.
+  - **Configure AWS Credentials:** Uses OIDC to authenticate with AWS securely.
+  - **Initialize Terraform:** Runs `terraform init`.
+  - **Validate Terraform Configuration:** Runs `terraform validate`.
+  - **Run Terraform Plan:** Runs `terraform plan`.
+  - **Apply Terraform Changes:** Runs `terraform apply -auto-approve`.
 - Used GitHub Secrets to store sensitive AWS configurations.
 - Ensured each step runs in the correct order to avoid errors.
 
@@ -86,22 +88,18 @@ This project focuses on setting up an AWS infrastructure using Terraform, ensuri
 
 ### 3️⃣ Ensuring Terraform Applied Correctly in CI/CD
 
-**Problem:** The `terraform apply` step initially failed because it couldn’t find the plan file.
-**Solution:** Updated the workflow to store the plan output in one step and reference it in the apply step:
-
-```sh
-terraform plan -out=tfplan
-terraform apply tfplan
-```
+**Problem:** The `terraform apply` step initially failed due to state lock issues.
+**Solution:** Ensured the `terraform init` step runs first and that AWS credentials are correctly configured.
 
 ## Files & Structure 👤
 
 ```
 .
-├── main.tf            # Main Terraform configuration (reference only)
+├── main.tf            # Reference file (empty or minimal configuration)
 ├── provider.tf        # AWS provider setup and backend configuration
 ├── variables.tf       # Variables for better reusability
 ├── resources.tf       # Contains all AWS resources (IAM, S3, etc.)
+├── terraform.tfvars   # Values for Terraform variables
 ├── .github/workflows  # GitHub Actions workflow for Terraform deployment
 ├── README.md          # This file 😎
 ```
