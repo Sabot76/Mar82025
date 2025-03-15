@@ -41,6 +41,7 @@ This project focuses on setting up an AWS infrastructure using Terraform, ensuri
 - Created an IAM role (`GithubActionsRole`) with the same permissions as the IAM user.
 - Configured an Identity Provider (OIDC) for GitHub Actions to allow secure access.
 - Updated the IAM trust policy to allow GitHub Actions to assume the role securely:
+
   ```json
   {
     "Version": "2012-10-17",
@@ -123,7 +124,7 @@ This significantly reduced execution time, optimized workflow efficiency, and el
 
 ## Files & Structure 👤
 
-```
+```bash
 .
 ├── main.tf            # Reference file (empty or minimal configuration)
 ├── provider.tf        # AWS provider setup and backend configuration
