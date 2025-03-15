@@ -3,26 +3,34 @@ name: Terraform Deployment
 on:
   push:
     branches:
-      - main  # Adjust if your default branch is different
+      - main
 
 permissions:
-  id-token: write  # Needed for OIDC authentication
+  id-token: write
   contents: read
 
 jobs:
   terraform-deploy:
-    name: Terraform Check, Plan, and Apply
+    name: Terraform Deployment
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Cache Terraform dependencies
+        uses: actions/cache@v3
+        with:
+          path: .terraform
+          key: terraform-${{ runner.os }}-${{ hashFiles('**/.terraform.lock.hcl') }}
+          restore-keys: |
+            terraform-${{ runner.os }}-
+
+      - name: Write AWS Account ID to env file
+        run: echo "TF_VAR_aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" >> $GITHUB_ENV
+
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
-
-      - name: Run terraform fmt
-        run: terraform fmt -check
 
       - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v3
@@ -31,14 +39,12 @@ jobs:
           role-session-name: GitHubActionsTerraform
           aws-region: eu-west-2
 
-      - name: Initialize Terraform
-        run: terraform init
-
-      - name: Validate Terraform Configuration
-        run: terraform validate
-
-      - name: Run Terraform Plan
-        run: terraform plan
-
-      - name: Apply Terraform Changes
-        run: terraform apply -auto-approve
+      - name: Run Terraform
+        run: |
+          terraform init
+          terraform fmt -check
+          terraform validate
+          terraform plan
+          terraform apply -auto-approve
+        env:
+          TF_VAR_aws_account_id: ${{ env.TF_VAR_aws_account_id }}
