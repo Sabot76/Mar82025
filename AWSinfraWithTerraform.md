@@ -96,5 +96,3 @@ To verify the setup:
 
 1. Launch one EC2 instance in a **Public Subnet** → Check internet access (ping `8.8.8.8`).
 2. Launch one EC2 instance in a **Private Subnet** → Should access internet via NAT Gateway.
-
----
