@@ -98,15 +98,3 @@ To verify the setup:
 2. Launch one EC2 instance in a **Private Subnet** → Should access internet via NAT Gateway.
 
 ---
-
-## ⚠️ Cost Warning
-
-The **NAT Gateway incurs a small hourly cost**.  
-**Run `terraform destroy` when not using the infrastructure to avoid unnecessary charges!**
-
----
-
-## Final Goal 🎯
-
-- Clean, production-ready AWS networking setup.
-- Easily extendable for Kubernetes clusters, databases, and more.
