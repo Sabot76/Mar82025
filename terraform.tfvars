@@ -1,2 +1,10 @@
 github_repo = "Mar82025"
 github_usr  = "Sabot76"
+# VPC and Subnet Variables
+vpc_cidr              = "10.0.0.0/16"
+public_subnet_a_cidr  = "10.0.1.0/24"
+public_subnet_b_cidr  = "10.0.2.0/24"
+private_subnet_a_cidr = "10.0.3.0/24"
+private_subnet_b_cidr = "10.0.4.0/24"
+az1                   = "eu-west-2a"
+az2                   = "eu-west-2b"
