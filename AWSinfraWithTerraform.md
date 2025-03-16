@@ -16,7 +16,7 @@ This setup is ideal for hosting Kubernetes clusters or any cloud resources requi
 
 ---
 
-## Architecture Diagram 🗺️
+## Architecture
 
 ```bash
 [VPC]
@@ -24,12 +24,32 @@ This setup is ideal for hosting Kubernetes clusters or any cloud resources requi
  ├── Public Subnet B (AZ2)  --> Internet Gateway
  ├── Private Subnet A (AZ1) --> NAT Gateway (via Public Subnet A)
  └── Private Subnet B (AZ2) --> NAT Gateway (via Public Subnet A)
-
-[Internet Gateway attached to VPC]
-[NAT Gateway in Public Subnet A]
 ```
 
 ---
+
+## Visual Networking Diagram
+
+```bash
+AWS Region (eu-west-2)
+│
+├── VPC: 10.0.0.0/16
+│   ├── Internet Gateway (attached to VPC)
+│   ├── NAT Gateway (in Public Subnet A)
+│   │
+│   ├── Public Subnet A (10.0.1.0/24, AZ1)
+│   │   └── Route Table: 0.0.0.0/0 -> Internet Gateway
+│   ├── Public Subnet B (10.0.2.0/24, AZ2)
+│   │   └── Route Table: 0.0.0.0/0 -> Internet Gateway
+│   │
+│   ├── Private Subnet A (10.0.3.0/24, AZ1)
+│   │   └── Route Table: 0.0.0.0/0 -> NAT Gateway
+│   └── Private Subnet B (10.0.4.0/24, AZ2)
+│       └── Route Table: 0.0.0.0/0 -> NAT Gateway
+```
+
+---
+
 
 ## Components Breakdown 🧩
 

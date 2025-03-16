@@ -54,13 +54,6 @@ resource "aws_vpc" "main_vpc" {
     Name = "main-vpc"
   }
 }
-# Internet Gateway
-resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.main_vpc.id
-  tags = {
-    Name = "main-igw"
-  }
-}
 
 # Public Subnet A 
 resource "aws_subnet" "public_subnet_a" {
@@ -108,7 +101,15 @@ resource "aws_eip" "nat_eip" {
     Name = "nat-eip"
   }
 }
-# NAT Gateway in Public Subnet A
+# Internet Gateway (for public subnets)
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.main_vpc.id
+  tags = {
+    Name = "main-igw"
+  }
+}
+
+# NAT Gateway in Public Subnet A (for private subnets)
 resource "aws_nat_gateway" "nat_gw" {
   allocation_id = aws_eip.nat_eip.id
   subnet_id     = aws_subnet.public_subnet_a.id
@@ -123,6 +124,29 @@ resource "aws_route_table" "public_rt" {
     Name = "public-rt"
   }
 }
+
+# Private Route Table
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.main_vpc.id
+  tags = {
+    Name = "private-rt"
+  }
+}
+# Public Route: Internet Gateway Access
+resource "aws_route" "public_internet_access" {
+  route_table_id         = aws_route_table.public_rt.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.igw.id
+}
+
+
+# Private Route: NAT Gateway Access
+resource "aws_route" "private_nat_access" {
+  route_table_id         = aws_route_table.private_rt.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.nat_gw.id
+}
+
 # Public Subnet A Route Table Association
 resource "aws_route_table_association" "public_a" {
   subnet_id      = aws_subnet.public_subnet_a.id
@@ -135,20 +159,6 @@ resource "aws_route_table_association" "public_b" {
   route_table_id = aws_route_table.public_rt.id
 }
 
-# Private Route Table
-resource "aws_route_table" "private_rt" {
-  vpc_id = aws_vpc.main_vpc.id
-  tags = {
-    Name = "private-rt"
-  }
-}
-
-# Private Route: NAT Gateway Access
-resource "aws_route" "private_nat_access" {
-  route_table_id         = aws_route_table.private_rt.id
-  destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = aws_nat_gateway.nat_gw.id
-}
 
 # Private Subnet A Route Table Association
 resource "aws_route_table_association" "private_a" {
