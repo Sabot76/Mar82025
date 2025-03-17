@@ -289,9 +289,20 @@ resource "aws_network_acl_rule" "private_egress" {
   to_port        = 65535
 }
 
+#Fetch latest Amazon Linux 2 AMI
+data "aws_ami" "amazon_linux" {
+  most_recent = true
+  owners = ["Amazon"]
+  filter {
+    name = "name"
+    values = ["amzn2-ami-hvm-2.0.*-x86_64-gp2"]
+  }
+}
+
+
 # Bastion Host EC2
 resource "aws_instance" "bastion" {
-  ami                    = "ami-0c55b159cbfafe1f0" # Amazon Linux 2 Free tier
+  ami                    = data.aws_ami.amazon_linux.id # Amazon Linux 2 Free tier
   instance_type          = "t2.micro"
   subnet_id              = aws_subnet.public_subnet_a.id
   vpc_security_group_ids = [aws_security_group.public_sg.id]
