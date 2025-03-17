@@ -173,85 +173,112 @@ resource "aws_route_table_association" "private_b" {
 }
 #Public Security Group
 resource "aws_security_group" "public_sg" {
-  name = "public/sg"
+  name   = "public/sg"
   vpc_id = aws_vpc.main_vpc.id
 
   ingress {
     description = "Allow SSH"
-    from_port = 22
-    to_port = 22
-    protocol = tcp
+    from_port   = 22
+    to_port     = 22
+    protocol    = tcp
     cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
     description = "Allow HTTP"
-    from_port = 80
-    to_port = 80
-    protocol = "tcp"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
     description = "Allow HTTPS"
-    from_port = 443
-    to_port = 443
-    protocol = "tcp"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
   }
   egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
 # Private Security Group
 resource "aws_security_group" "private_sg" {
-  name = "private-sg"
+  name   = "private-sg"
   vpc_id = aws_vpc.main_vpc.id
 
   ingress {
-    description = "SSH from Bastion only"
-    from_port = 22
-    to_port = 22
-    protocol = "tcp"
+    description     = "SSH from Bastion only"
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
     security_groups = [aws_security_group.public_sg]
   }
   egress = {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
 #Public NACL
 resource "aws_network_acl" "public_nac1" {
-  vpc_id = aws_vpc.main_vpc.id
-  subnet_ids = [aws_subnet.public_subnet_a.id,aws_subnet.public_subnet_b.id]
+  vpc_id     = aws_vpc.main_vpc.id
+  subnet_ids = [aws_subnet.public_subnet_a.id, aws_subnet.public_subnet_b.id]
 }
 #Public NACL Ingress Rule
 resource "aws_network_acl_rule" "public_ingress" {
   network_acl_id = aws_network_acl.public_nac1.id
-  rule_number = 100
-  egress = false
-  protocol = "tcp"
-  rule_action = "allow"
-  cidr_block = "0.0.0.0/0"
-  from_port = 0
-  to_port = 65535
+  rule_number    = 100
+  egress         = false
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 0
+  to_port        = 65535
 }
 #Public NACL Egrees Rule
 resource "aws_network_acl_rule" "public_egrees" {
   network_acl_id = aws_network_acl.public_nac1.id
-  rule_number = 100
-  egress = true
-  protocol = "tcp"
-  rule_action = "allow"
-  cidr_block = "0.0.0.0/0"
-  from_port = 0
-  to_port = 65535
+  rule_number    = 100
+  egress         = true
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 0
+  to_port        = 65535
 }
 #Private NACL
 resource "aws_network_acl" "private_nac1" {
-  vpc_id = aws_vpc.main_vpc.id
+  vpc_id     = aws_vpc.main_vpc.id
+  subnet_ids = [aws_subnet.private_subnet_a.id, aws_subnet.private_subnet_b.id]
+  tags = {
+    Name = "private-nac1"
+  }
+}
+
+#Private NACL Ingress Rule
+resource "aws_network_acl_rule" "private_ingrees" {
+  network_acl_id = aws_network_acl.private_nac1.id
+  rule_number    = 100
+  egress         = false
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = aws_vpc.main_vpc.cidr_block
+  from_port      = 0
+  to_port        = 65535
+}
+#Private NACL Egress Rule
+resource "aws_network_acl_rule" "private_egrees" {
+  network_acl_id = aws_network_acl.private_nac1
+  rule_number    = 100
+  egress         = true
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 0
+  to_port        = 65535
 }
