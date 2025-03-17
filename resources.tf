@@ -1,5 +1,3 @@
-# resources.tf
-
 # Create an S3 bucket
 resource "aws_s3_bucket" "my_kicsi_buket" {
   bucket = "my-new-terraform-bucket-batuisten-estobbis"
@@ -45,6 +43,7 @@ resource "aws_iam_role_policy_attachment" "github_actions_policies" {
   role       = aws_iam_role.github_actions_role.name
   policy_arn = each.value
 }
+
 # VPC
 resource "aws_vpc" "main_vpc" {
   cidr_block           = var.vpc_cidr
@@ -55,7 +54,7 @@ resource "aws_vpc" "main_vpc" {
   }
 }
 
-# Public Subnet A 
+# Public Subnet A
 resource "aws_subnet" "public_subnet_a" {
   vpc_id                  = aws_vpc.main_vpc.id
   cidr_block              = var.public_subnet_a_cidr
@@ -65,6 +64,7 @@ resource "aws_subnet" "public_subnet_a" {
     Name = "public-subnet-a"
   }
 }
+
 # Public Subnet B
 resource "aws_subnet" "public_subnet_b" {
   vpc_id                  = aws_vpc.main_vpc.id
@@ -85,6 +85,7 @@ resource "aws_subnet" "private_subnet_a" {
     Name = "private-subnet-a"
   }
 }
+
 # Private Subnet B
 resource "aws_subnet" "private_subnet_b" {
   vpc_id            = aws_vpc.main_vpc.id
@@ -94,6 +95,7 @@ resource "aws_subnet" "private_subnet_b" {
     Name = "private-subnet-b"
   }
 }
+
 # NAT Gateway Elastic IP
 resource "aws_eip" "nat_eip" {
   domain = "vpc"
@@ -101,7 +103,8 @@ resource "aws_eip" "nat_eip" {
     Name = "nat-eip"
   }
 }
-# Internet Gateway (for public subnets)
+
+# Internet Gateway
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main_vpc.id
   tags = {
@@ -109,7 +112,7 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
-# NAT Gateway in Public Subnet A (for private subnets)
+# NAT Gateway
 resource "aws_nat_gateway" "nat_gw" {
   allocation_id = aws_eip.nat_eip.id
   subnet_id     = aws_subnet.public_subnet_a.id
@@ -117,7 +120,8 @@ resource "aws_nat_gateway" "nat_gw" {
     Name = "main-nat-gw"
   }
 }
-# Public Route Table 
+
+# Public Route Table
 resource "aws_route_table" "public_rt" {
   vpc_id = aws_vpc.main_vpc.id
   tags = {
@@ -132,13 +136,13 @@ resource "aws_route_table" "private_rt" {
     Name = "private-rt"
   }
 }
-# Public Route: Internet Gateway Access
+
+# Public Route: IGW Access
 resource "aws_route" "public_internet_access" {
   route_table_id         = aws_route_table.public_rt.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.igw.id
 }
-
 
 # Private Route: NAT Gateway Access
 resource "aws_route" "private_nat_access" {
@@ -147,42 +151,40 @@ resource "aws_route" "private_nat_access" {
   nat_gateway_id         = aws_nat_gateway.nat_gw.id
 }
 
-# Public Subnet A Route Table Association
+# Route Table Associations
 resource "aws_route_table_association" "public_a" {
   subnet_id      = aws_subnet.public_subnet_a.id
   route_table_id = aws_route_table.public_rt.id
 }
 
-# Public Subnet B Route Table Association
 resource "aws_route_table_association" "public_b" {
   subnet_id      = aws_subnet.public_subnet_b.id
   route_table_id = aws_route_table.public_rt.id
 }
 
-
-# Private Subnet A Route Table Association
 resource "aws_route_table_association" "private_a" {
   subnet_id      = aws_subnet.private_subnet_a.id
   route_table_id = aws_route_table.private_rt.id
 }
 
-# Private Subnet B Route Table Association
 resource "aws_route_table_association" "private_b" {
   subnet_id      = aws_subnet.private_subnet_b.id
   route_table_id = aws_route_table.private_rt.id
 }
-#Public Security Group
+
+# Public Security Group
 resource "aws_security_group" "public_sg" {
-  name   = "public/sg"
+  name   = "public-sg"
   vpc_id = aws_vpc.main_vpc.id
 
   ingress {
     description = "Allow SSH"
     from_port   = 22
     to_port     = 22
-    protocol    = tcp
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   ingress {
     description = "Allow HTTP"
     from_port   = 80
@@ -190,12 +192,15 @@ resource "aws_security_group" "public_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   ingress {
     description = "Allow HTTPS"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -214,9 +219,10 @@ resource "aws_security_group" "private_sg" {
     from_port       = 22
     to_port         = 22
     protocol        = "tcp"
-    security_groups = [aws_security_group.public_sg]
+    security_groups = [aws_security_group.public_sg.id]
   }
-  egress = {
+
+  egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -224,14 +230,14 @@ resource "aws_security_group" "private_sg" {
   }
 }
 
-#Public NACL
-resource "aws_network_acl" "public_nac1" {
+# Public NACL
+resource "aws_network_acl" "public_nacl" {
   vpc_id     = aws_vpc.main_vpc.id
   subnet_ids = [aws_subnet.public_subnet_a.id, aws_subnet.public_subnet_b.id]
 }
-#Public NACL Ingress Rule
+
 resource "aws_network_acl_rule" "public_ingress" {
-  network_acl_id = aws_network_acl.public_nac1.id
+  network_acl_id = aws_network_acl.public_nacl.id
   rule_number    = 100
   egress         = false
   protocol       = "tcp"
@@ -240,9 +246,9 @@ resource "aws_network_acl_rule" "public_ingress" {
   from_port      = 0
   to_port        = 65535
 }
-#Public NACL Egrees Rule
-resource "aws_network_acl_rule" "public_egrees" {
-  network_acl_id = aws_network_acl.public_nac1.id
+
+resource "aws_network_acl_rule" "public_egress" {
+  network_acl_id = aws_network_acl.public_nacl.id
   rule_number    = 100
   egress         = true
   protocol       = "tcp"
@@ -251,18 +257,18 @@ resource "aws_network_acl_rule" "public_egrees" {
   from_port      = 0
   to_port        = 65535
 }
-#Private NACL
-resource "aws_network_acl" "private_nac1" {
+
+# Private NACL
+resource "aws_network_acl" "private_nacl" {
   vpc_id     = aws_vpc.main_vpc.id
   subnet_ids = [aws_subnet.private_subnet_a.id, aws_subnet.private_subnet_b.id]
   tags = {
-    Name = "private-nac1"
+    Name = "private-nacl"
   }
 }
 
-#Private NACL Ingress Rule
-resource "aws_network_acl_rule" "private_ingrees" {
-  network_acl_id = aws_network_acl.private_nac1.id
+resource "aws_network_acl_rule" "private_ingress" {
+  network_acl_id = aws_network_acl.private_nacl.id
   rule_number    = 100
   egress         = false
   protocol       = "tcp"
@@ -271,9 +277,9 @@ resource "aws_network_acl_rule" "private_ingrees" {
   from_port      = 0
   to_port        = 65535
 }
-#Private NACL Egress Rule
-resource "aws_network_acl_rule" "private_egrees" {
-  network_acl_id = aws_network_acl.private_nac1
+
+resource "aws_network_acl_rule" "private_egress" {
+  network_acl_id = aws_network_acl.private_nacl.id
   rule_number    = 100
   egress         = true
   protocol       = "tcp"
@@ -283,9 +289,9 @@ resource "aws_network_acl_rule" "private_egrees" {
   to_port        = 65535
 }
 
-# Bastion Host EC2 in Public Subnet A
+# Bastion Host EC2
 resource "aws_instance" "bastion" {
-  ami                    = "ami-0c55b159cbfafe1f0" # Amazon Linux 2 AMI (Free tier)
+  ami                    = "ami-0c55b159cbfafe1f0" # Amazon Linux 2 Free tier
   instance_type          = "t2.micro"
   subnet_id              = aws_subnet.public_subnet_a.id
   vpc_security_group_ids = [aws_security_group.public_sg.id]
@@ -293,6 +299,5 @@ resource "aws_instance" "bastion" {
 
   tags = {
     Name = "BastionHost"
-    
   }
 }
