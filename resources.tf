@@ -171,3 +171,35 @@ resource "aws_route_table_association" "private_b" {
   subnet_id      = aws_subnet.private_subnet_b.id
   route_table_id = aws_route_table.private_rt.id
 }
+#Public Security Group
+resource "aws_security_group" "public_sq" {
+  name = "public/sg"
+  vpc_id = aws_vpc.main_vpc.id
+
+  ingress {
+    description = "Allow SSH"
+    from_port = 22
+    to_port = 22
+    protocol = tcp
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    description = "Allow HTTP"
+    from_port = 80
+    to_port = 80
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    description = "Allow HTTPS"
+    from_port = 443
+    to_port = 443
+    protocol = "tcp"
+  }
+  egress {
+    from_port = 0
+    to_port = 0
+    protocol = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
