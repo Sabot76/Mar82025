@@ -222,5 +222,36 @@ resource "aws_security_group" "private_sg" {
     protocol = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
 
+#Public NACL
+resource "aws_network_acl" "public_nac1" {
+  vpc_id = aws_vpc.main_vpc.id
+  subnet_ids = [aws_subnet.public_subnet_a.id,aws_subnet.public_subnet_b.id]
+}
+#Public NACL Ingress Rule
+resource "aws_network_acl_rule" "public_ingress" {
+  network_acl_id = aws_network_acl.public_nac1.id
+  rule_number = 100
+  egress = false
+  protocol = "tcp"
+  rule_action = "allow"
+  cidr_block = "0.0.0.0/0"
+  from_port = 0
+  to_port = 65535
+}
+#Public NACL Egrees Rule
+resource "aws_network_acl_rule" "public_egrees" {
+  network_acl_id = aws_network_acl.public_nac1.id
+  rule_number = 100
+  egress = true
+  protocol = "tcp"
+  rule_action = "allow"
+  cidr_block = "0.0.0.0/0"
+  from_port = 0
+  to_port = 65535
+}
+#Private NACL
+resource "aws_network_acl" "private_nac1" {
+  vpc_id = aws_vpc.main_vpc.id
 }
