@@ -282,3 +282,16 @@ resource "aws_network_acl_rule" "private_egrees" {
   from_port      = 0
   to_port        = 65535
 }
+
+# Bastion Host EC2 in Public Subnet A
+resource "aws_instance" "bastion" {
+  ami                    = "ami-0c55b159cbfafe1f0" # Amazon Linux 2 AMI (Free tier)
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.public_subnet_a.id
+  vpc_security_group_ids = [aws_security_group.public_sg.id]
+  key_name               = "macKeyPair"
+
+  tags = {
+    Name = "BastionHost"
+  }
+}
