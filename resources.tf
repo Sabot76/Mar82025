@@ -292,9 +292,9 @@ resource "aws_network_acl_rule" "private_egress" {
 #Fetch latest Amazon Linux 2 AMI
 data "aws_ami" "amazon_linux" {
   most_recent = true
-  owners = ["Amazon"]
+  owners      = ["Amazon"]
   filter {
-    name = "name"
+    name   = "name"
     values = ["amzn2-ami-hvm-2.0.*-x86_64-gp2"]
   }
 }
