@@ -353,3 +353,47 @@ resource "aws_instance" "private_ec2" {
     Name = "Private-Test-Instance"
   }
 }
+
+#Testing 
+
+resource "aws_network_acl_rule" "public_ingress_icmp" {
+  network_acl_id = aws_network_acl.public_nacl.id
+  rule_number    = 110
+  egress         = false
+  protocol       = "icmp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = -1
+  to_port        = -1
+}
+resource "aws_network_acl_rule" "public_egress_icmp" {
+  network_acl_id = aws_network_acl.public_nacl.id
+  rule_number    = 110
+  egress         = true
+  protocol       = "icmp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = -1
+  to_port        = -1
+}
+resource "aws_network_acl_rule" "private_ingress_icmp" {
+  network_acl_id = aws_network_acl.private_nacl.id
+  rule_number    = 110
+  egress         = false
+  protocol       = "icmp"
+  rule_action    = "allow"
+  cidr_block     = aws_vpc.main_vpc.cidr_block
+  from_port      = -1
+  to_port        = -1
+}
+
+resource "aws_network_acl_rule" "private_egress_icmp" {
+  network_acl_id = aws_network_acl.private_nacl.id
+  rule_number    = 110
+  egress         = true
+  protocol       = "icmp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = -1
+  to_port        = -1
+}
