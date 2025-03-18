@@ -323,6 +323,7 @@ resource "aws_instance" "bastion" {
   subnet_id              = aws_subnet.public_subnet_a.id
   vpc_security_group_ids = [aws_security_group.public_sg.id]
   key_name               = "macKeyPair"
+  source_dest_check      = false
 
   tags = {
     Name = "BastionHost"
