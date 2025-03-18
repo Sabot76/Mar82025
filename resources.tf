@@ -312,3 +312,26 @@ resource "aws_instance" "bastion" {
     Name = "BastionHost"
   }
 }
+resource "aws_instance" "public_ec2" {
+  ami                         = data.aws_ami.amazon_linux.id # Amazon Linux 2 Free tier
+  instance_type               = "t2.micro"
+  subnet_id                   = aws_subnet.public_subnet_a.id
+  associate_public_ip_address = true
+  vpc_security_group_ids      = [aws_security_group.public_sg.id]
+  key_name                    = "macKeyPair"
+
+  tags = {
+    Name = "Public-Test-Instance"
+  }
+}
+resource "aws_instance" "private_ec2" {
+  ami                    = data.aws_ami.amazon_linux.id # Amazon Linux 2 Free tier
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.private_subnet_a.id
+  vpc_security_group_ids = [aws_security_group.public_sg.id]
+  key_name               = "macKeyPair"
+
+  tags = {
+    Name = "Private-Test-Instance"
+  }
+}
