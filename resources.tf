@@ -172,7 +172,7 @@ resource "aws_route_table_association" "private_b" {
   route_table_id = aws_route_table.private_rt.id
 }
 
-# Public Security Group
+# Public Security Group (Updated with ICMP)
 resource "aws_security_group" "public_sg" {
   name   = "public-sg"
   vpc_id = aws_vpc.main_vpc.id
@@ -201,6 +201,14 @@ resource "aws_security_group" "public_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description = "Allow ICMP (Ping)"
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -209,7 +217,7 @@ resource "aws_security_group" "public_sg" {
   }
 }
 
-# Private Security Group
+# Private Security Group (Updated with ICMP from Bastion)
 resource "aws_security_group" "private_sg" {
   name   = "private-sg"
   vpc_id = aws_vpc.main_vpc.id
@@ -222,6 +230,14 @@ resource "aws_security_group" "private_sg" {
     security_groups = [aws_security_group.public_sg.id]
   }
 
+  ingress {
+    description     = "ICMP (Ping) from Bastion"
+    from_port       = -1
+    to_port         = -1
+    protocol        = "icmp"
+    security_groups = [aws_security_group.public_sg.id]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -230,7 +246,7 @@ resource "aws_security_group" "private_sg" {
   }
 }
 
-# Public NACL
+# Public NACL (Unchanged)
 resource "aws_network_acl" "public_nacl" {
   vpc_id     = aws_vpc.main_vpc.id
   subnet_ids = [aws_subnet.public_subnet_a.id, aws_subnet.public_subnet_b.id]
@@ -258,7 +274,7 @@ resource "aws_network_acl_rule" "public_egress" {
   to_port        = 65535
 }
 
-# Private NACL
+# Private NACL (Unchanged)
 resource "aws_network_acl" "private_nacl" {
   vpc_id     = aws_vpc.main_vpc.id
   subnet_ids = [aws_subnet.private_subnet_a.id, aws_subnet.private_subnet_b.id]
@@ -289,15 +305,7 @@ resource "aws_network_acl_rule" "private_egress" {
   to_port        = 65535
 }
 
-#Fetch latest Amazon Linux 2 AMI
-data "aws_ami" "amazon_linux" {
-  most_recent = true
-  owners      = ["amazon"]
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-2.0.*-x86_64-gp2"]
-  }
-}
+# Fetch latest Amazon Linux 2 AMI
 
 
 # Bastion Host EC2
@@ -312,6 +320,7 @@ resource "aws_instance" "bastion" {
     Name = "BastionHost"
   }
 }
+
 resource "aws_instance" "public_ec2" {
   ami                         = data.aws_ami.amazon_linux.id # Amazon Linux 2 Free tier
   instance_type               = "t2.micro"
@@ -324,11 +333,12 @@ resource "aws_instance" "public_ec2" {
     Name = "Public-Test-Instance"
   }
 }
+
 resource "aws_instance" "private_ec2" {
   ami                    = data.aws_ami.amazon_linux.id # Amazon Linux 2 Free tier
   instance_type          = "t2.micro"
   subnet_id              = aws_subnet.private_subnet_a.id
-  vpc_security_group_ids = [aws_security_group.public_sg.id]
+  vpc_security_group_ids = [aws_security_group.private_sg.id]
   key_name               = "macKeyPair"
 
   tags = {
