@@ -97,12 +97,12 @@ resource "aws_subnet" "private_subnet_b" {
 }
 
 # NAT Gateway Elastic IP
-resource "aws_eip" "nat_eip" {
+/* resource "aws_eip" "nat_eip" {
   domain = "vpc"
   tags = {
     Name = "nat-eip"
   }
-}
+} */
 
 # Internet Gateway
 resource "aws_internet_gateway" "igw" {
@@ -113,14 +113,14 @@ resource "aws_internet_gateway" "igw" {
 }
 
 # NAT Gateway
-resource "aws_nat_gateway" "nat_gw" {
+/* resource "aws_nat_gateway" "nat_gw" {
   allocation_id = aws_eip.nat_eip.id
   subnet_id     = aws_subnet.public_subnet_a.id
   tags = {
     Name = "main-nat-gw"
   }
 }
-
+ */
 # Public Route Table
 resource "aws_route_table" "public_rt" {
   vpc_id = aws_vpc.main_vpc.id
@@ -145,11 +145,11 @@ resource "aws_route" "public_internet_access" {
 }
 
 # Private Route: NAT Gateway Access
-resource "aws_route" "private_nat_access" {
+/* resource "aws_route" "private_nat_access" {
   route_table_id         = aws_route_table.private_rt.id
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.nat_gw.id
-}
+} */
 
 # Route Table Associations
 resource "aws_route_table_association" "public_a" {
@@ -172,7 +172,7 @@ resource "aws_route_table_association" "private_b" {
   route_table_id = aws_route_table.private_rt.id
 }
 
-# Public Security Group (Updated with ICMP)
+# Public Security Group (with ICMP)
 resource "aws_security_group" "public_sg" {
   name   = "public-sg"
   vpc_id = aws_vpc.main_vpc.id
@@ -217,7 +217,7 @@ resource "aws_security_group" "public_sg" {
   }
 }
 
-# Private Security Group (Updated with ICMP from Bastion)
+# Private Security Group (ICMP from Bastion)
 resource "aws_security_group" "private_sg" {
   name   = "private-sg"
   vpc_id = aws_vpc.main_vpc.id
@@ -246,83 +246,29 @@ resource "aws_security_group" "private_sg" {
   }
 }
 
-# Public NACL (Unchanged)
-resource "aws_network_acl" "public_nacl" {
-  vpc_id     = aws_vpc.main_vpc.id
-  subnet_ids = [aws_subnet.public_subnet_a.id, aws_subnet.public_subnet_b.id]
-}
-
-resource "aws_network_acl_rule" "public_ingress" {
-  network_acl_id = aws_network_acl.public_nacl.id
-  rule_number    = 100
-  egress         = false
-  protocol       = "tcp"
-  rule_action    = "allow"
-  cidr_block     = "0.0.0.0/0"
-  from_port      = 0
-  to_port        = 65535
-}
-
-resource "aws_network_acl_rule" "public_egress" {
-  network_acl_id = aws_network_acl.public_nacl.id
-  rule_number    = 100
-  egress         = true
-  protocol       = "tcp"
-  rule_action    = "allow"
-  cidr_block     = "0.0.0.0/0"
-  from_port      = 0
-  to_port        = 65535
-}
-
-# Private NACL (Unchanged)
-resource "aws_network_acl" "private_nacl" {
-  vpc_id     = aws_vpc.main_vpc.id
-  subnet_ids = [aws_subnet.private_subnet_a.id, aws_subnet.private_subnet_b.id]
-  tags = {
-    Name = "private-nacl"
-  }
-}
-
-resource "aws_network_acl_rule" "private_ingress" {
-  network_acl_id = aws_network_acl.private_nacl.id
-  rule_number    = 100
-  egress         = false
-  protocol       = "tcp"
-  rule_action    = "allow"
-  cidr_block     = aws_vpc.main_vpc.cidr_block
-  from_port      = 0
-  to_port        = 65535
-}
-
-resource "aws_network_acl_rule" "private_egress" {
-  network_acl_id = aws_network_acl.private_nacl.id
-  rule_number    = 100
-  egress         = true
-  protocol       = "tcp"
-  rule_action    = "allow"
-  cidr_block     = "0.0.0.0/0"
-  from_port      = 0
-  to_port        = 65535
-}
-
-# Fetch latest Amazon Linux 2 AMI
-#Fetch latest Amazon Linux 2 AMI
+# Amazon Linux AMI
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-2.0.*-x86_64-gp2"]
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]  # Updated for Amazon Linux 2
+  }
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
   }
 }
 
+
 # Bastion Host EC2
 resource "aws_instance" "bastion" {
-  ami                    = data.aws_ami.amazon_linux.id # Amazon Linux 2 Free tier
+  ami                    = data.aws_ami.amazon_linux.id
   instance_type          = "t2.micro"
   subnet_id              = aws_subnet.public_subnet_a.id
   vpc_security_group_ids = [aws_security_group.public_sg.id]
   key_name               = "macKeyPair"
+
   source_dest_check      = false
 
   tags = {
@@ -330,8 +276,9 @@ resource "aws_instance" "bastion" {
   }
 }
 
-resource "aws_instance" "public_ec2" {
-  ami                         = data.aws_ami.amazon_linux.id # Amazon Linux 2 Free tier
+
+/* resource "aws_instance" "public_ec2" {
+  ami                         = data.aws_ami.amazon_linux.id
   instance_type               = "t2.micro"
   subnet_id                   = aws_subnet.public_subnet_a.id
   associate_public_ip_address = true
@@ -341,10 +288,11 @@ resource "aws_instance" "public_ec2" {
   tags = {
     Name = "Public-Test-Instance"
   }
-}
+} */
 
-resource "aws_instance" "private_ec2" {
-  ami                    = data.aws_ami.amazon_linux.id # Amazon Linux 2 Free tier
+
+/* resource "aws_instance" "private_ec2" {
+  ami                    = data.aws_ami.amazon_linux.id
   instance_type          = "t2.micro"
   subnet_id              = aws_subnet.private_subnet_a.id
   vpc_security_group_ids = [aws_security_group.private_sg.id]
@@ -353,48 +301,4 @@ resource "aws_instance" "private_ec2" {
   tags = {
     Name = "Private-Test-Instance"
   }
-}
-
-#Testing 
-
-resource "aws_network_acl_rule" "public_ingress_icmp" {
-  network_acl_id = aws_network_acl.public_nacl.id
-  rule_number    = 110
-  egress         = false
-  protocol       = "icmp"
-  rule_action    = "allow"
-  cidr_block     = "0.0.0.0/0"
-  from_port      = -1
-  to_port        = -1
-}
-resource "aws_network_acl_rule" "public_egress_icmp" {
-  network_acl_id = aws_network_acl.public_nacl.id
-  rule_number    = 110
-  egress         = true
-  protocol       = "icmp"
-  rule_action    = "allow"
-  cidr_block     = "0.0.0.0/0"
-  from_port      = -1
-  to_port        = -1
-}
-resource "aws_network_acl_rule" "private_ingress_icmp" {
-  network_acl_id = aws_network_acl.private_nacl.id
-  rule_number    = 110
-  egress         = false
-  protocol       = "icmp"
-  rule_action    = "allow"
-  cidr_block     = aws_vpc.main_vpc.cidr_block
-  from_port      = -1
-  to_port        = -1
-}
-
-resource "aws_network_acl_rule" "private_egress_icmp" {
-  network_acl_id = aws_network_acl.private_nacl.id
-  rule_number    = 110
-  egress         = true
-  protocol       = "icmp"
-  rule_action    = "allow"
-  cidr_block     = "0.0.0.0/0"
-  from_port      = -1
-  to_port        = -1
-}
+} */
