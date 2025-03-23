@@ -252,7 +252,7 @@ data "aws_ami" "amazon_linux" {
   owners      = ["amazon"]
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]  # Updated for Amazon Linux 2
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"] # Updated for Amazon Linux 2
   }
   filter {
     name   = "virtualization-type"
@@ -269,7 +269,7 @@ resource "aws_instance" "bastion" {
   vpc_security_group_ids = [aws_security_group.public_sg.id]
   key_name               = "macKeyPair"
 
-  source_dest_check      = false
+  source_dest_check = false
 
   tags = {
     Name = "BastionHost"
@@ -291,15 +291,21 @@ resource "aws_instance" "bastion" {
 } */
 
 
- resource "aws_instance" "k3s_node" {
-  ami                    = data.aws_ami.amazon_linux.id
-  instance_type          = "t2.micro"
-  subnet_id              = aws_subnet.private_subnet_a.id
-  vpc_security_group_ids = [aws_security_group.private_sg.id]
-  key_name               = "macKeyPair"
-  
+resource "aws_instance" "k3s_node" {
+  ami                         = data.aws_ami.amazon_linux.id
+  instance_type               = "t2.micro"
+  subnet_id                   = aws_subnet.public_subnet_a.id
+  vpc_security_group_ids      = [aws_security_group.public_sg.id]
+  key_name                    = "macKeyPair"
+  associate_public_ip_address = true # Important! Ensures public IP
 
   tags = {
     Name = "K3sNode"
   }
+
+  user_data = <<-EOF
+              #!/bin/bash
+              yum -update -y
+              curl -sfL https://get.k3s.io | sh -
+              EOF
 }
