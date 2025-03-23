@@ -291,14 +291,15 @@ resource "aws_instance" "bastion" {
 } */
 
 
-/* resource "aws_instance" "private_ec2" {
+ resource "aws_instance" "k3s_node" {
   ami                    = data.aws_ami.amazon_linux.id
   instance_type          = "t2.micro"
   subnet_id              = aws_subnet.private_subnet_a.id
   vpc_security_group_ids = [aws_security_group.private_sg.id]
   key_name               = "macKeyPair"
+  
 
   tags = {
-    Name = "Private-Test-Instance"
+    Name = "K3sNode"
   }
-} */
+}
