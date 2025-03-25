@@ -105,16 +105,20 @@ kubectl port-forward svc/grafana 3000:80
 ```
 
 Then open in your browser:
-```
+
+```txt
 http://localhost:3000
 ```
+
 Login:
+
 - Username: `admin`
 - Password: `admin`
 
 ### 4. (Optional) Add Prometheus as a Data Source
 
 If not auto-detected by Grafana:
+
 - Go to ⚙️ > Data Sources > Add New
 - Select Prometheus
 - URL: `http://prometheus-server`
@@ -125,9 +129,11 @@ If not auto-detected by Grafana:
 
 - Kubernetes cluster running and reachable.
 - Simple pod deployed successfully:
+
 ```bash
 kubectl apply -f https://k8s.io/examples/pods/simple-pod.yaml
 ```
+
 - Monitoring dashboard up and running.
 - All setup automated via Terraform + cloud-init (`user_data`).
 
