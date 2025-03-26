@@ -136,4 +136,3 @@ kubectl apply -f https://k8s.io/examples/pods/simple-pod.yaml
 
 - Monitoring dashboard up and running.
 - All setup automated via Terraform + cloud-init (`user_data`).
-

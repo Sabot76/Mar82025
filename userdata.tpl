@@ -1,8 +1,15 @@
 #!/bin/bash
 
+# Log all output to a file for debugging
+exec > /var/log/user_data.log 2>&1
+set -ex
+
+# Wait for cloud-init to settle network (Ubuntu quirk)
+sleep 30
+
 # Update & install dependencies
-sudo apt update -y
-sudo apt upgrade -y
+apt update -y
+apt upgrade -y
 
 # Install k3s
 curl -sfL https://get.k3s.io | sh -
@@ -11,10 +18,7 @@ curl -sfL https://get.k3s.io | sh -
 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
 # Change kubeconfig permission to avoid sudo issues
-sudo chmod 644 /etc/rancher/k3s/k3s.yaml
-
-# Check cluster status
-kubectl get nodes
+chmod 644 /etc/rancher/k3s/k3s.yaml
 
 # Install Helm (for monitoring tools)
 curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
@@ -30,4 +34,5 @@ helm install prometheus prometheus-community/prometheus
 # Install Grafana
 helm install grafana grafana/grafana --set adminPassword='admin'
 
-# Done!
+# Done message
+echo "✅ K3s + Monitoring setup complete!"
