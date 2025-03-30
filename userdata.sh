@@ -8,17 +8,14 @@ set -ex
 sleep 30
 
 # Update & install dependencies
-apt update -y
-apt upgrade -y
+sudo apt update -y
+sudo apt upgrade -y
 
 # Install k3s
 curl -sfL https://get.k3s.io | sh -
 
-# Set KUBECONFIG environment variable
-export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-
-# Change kubeconfig permission to avoid sudo issues
-chmod 644 /etc/rancher/k3s/k3s.yaml
+# get information about the cluster
+sudo k3s kubectl get node 
 
 # Install Helm (for monitoring tools)
 curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash

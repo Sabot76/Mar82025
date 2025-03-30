@@ -320,3 +320,18 @@ resource "aws_instance" "k3s_node" {
   }
 
 }
+
+resource "aws_instance" "k3s_nodev2" {
+  ami = data.aws_ami.ubuntu.id
+  instance_type = "t2.small"
+  subnet_id = aws_subnet.public_subnet_a.id
+  vpc_security_group_ids = [ aws_security_group.public_sg.id ]
+  key_name = "macKeyPair"
+  associate_public_ip_address = true
+
+  user_data = file("jenkins_user_data.sh")
+
+  tags = {
+    Name = "k3sNode-Jenkins"
+  }
+}
