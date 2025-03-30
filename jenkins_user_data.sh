@@ -39,13 +39,15 @@ helm repo update
 echo "📂 Creating Jenkins namespace..."
 sudo /usr/local/bin/kubectl create namespace jenkins || true
 
-# Install Jenkins with LoadBalancer service
-echo "📦 Installing Jenkins via Helm..."
+# Install Jenkins with persistence enabled
+echo "📦 Installing Jenkins via Helm with PVC..."
 helm install jenkins jenkins/jenkins \
   --namespace jenkins \
   --set controller.serviceType=LoadBalancer \
   --set controller.adminPassword=admin123 \
-  --set persistence.enabled=false
+  --set persistence.enabled=true \
+  --set persistence.size=8Gi \
+  --set persistence.storageClass=local-path
 
 # Wait for Jenkins pod to appear
 echo "⏳ Waiting for Jenkins pod..."
@@ -62,6 +64,11 @@ sudo /usr/local/bin/kubectl logs -n jenkins "$JENKINS_POD" -c init || echo "No i
 # Wait for Jenkins to be fully ready
 echo "⏳ Waiting for Jenkins readiness..."
 sleep 60
+
+# ✅ Verify PVC and PV status
+echo "🔎 Verifying PVC and PV status..."
+sudo /usr/local/bin/kubectl get pvc -n jenkins || echo "⚠️ PVC check failed"
+sudo /usr/local/bin/kubectl get pv || echo "⚠️ PV check failed"
 
 # Port-forward Jenkins and create freestyle job with curl (JCasC not used here)
 echo "🔌 Port-forwarding Jenkins..."
