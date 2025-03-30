@@ -50,7 +50,6 @@ AWS Region (eu-west-2)
 
 ---
 
-
 ## Components Breakdown 🧩
 
 | Component            | Purpose                                                        | Free? |

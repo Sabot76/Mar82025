@@ -37,7 +37,7 @@ helm repo update
 
 # Create Jenkins namespace
 echo "📂 Creating Jenkins namespace..."
-sudo /usr/local/bin/kubectl create namespace jenkins || true
+kubectl create namespace jenkins || true
 
 # Install Jenkins with persistence enabled
 echo "📦 Installing Jenkins via Helm with PVC..."
@@ -55,11 +55,11 @@ sleep 60
 
 # Get Jenkins pod name
 echo "🔍 Finding Jenkins pod name..."
-JENKINS_POD=$(sudo /usr/local/bin/kubectl get pods -n jenkins -l app.kubernetes.io/component=jenkins-controller -o jsonpath="{.items[0].metadata.name}")
+JENKINS_POD=$(kubectl get pods -n jenkins -l app.kubernetes.io/component=jenkins-controller -o jsonpath="{.items[0].metadata.name}")
 
 # Show init container logs (if any)
 echo "📄 Fetching init container logs (if any)..."
-sudo /usr/local/bin/kubectl logs -n jenkins "$JENKINS_POD" -c init || echo "No init container logs found."
+kubectl logs -n jenkins "$JENKINS_POD" -c init || echo "No init container logs found."
 
 # Wait for Jenkins to be fully ready
 echo "⏳ Waiting for Jenkins readiness..."
@@ -67,12 +67,10 @@ sleep 60
 
 # ✅ Verify PVC and PV status
 echo "🔎 Verifying PVC and PV status..."
-sudo /usr/local/bin/kubectl get pvc -n jenkins || echo "⚠️ PVC check failed"
-sudo /usr/local/bin/kubectl get pv || echo "⚠️ PV check failed"
+kubectl get pvc -n jenkins || echo "⚠️ PVC check failed"
+kubectl get pv || echo "⚠️ PV check failed"
 
-# Port-forward Jenkins and create freestyle job with curl (JCasC not used here)
-echo "🔌 Port-forwarding Jenkins..."
-JENKINS_URL="http://localhost:8080"
+# Note: Skipping port-forwarding inside user_data as it may fail silently or not persist
 
 # Create Jenkins job XML definition
 echo "📝 Creating job XML file..."
@@ -91,21 +89,22 @@ cat <<EOF > hello-job.xml
 </project>
 EOF
 
-# Install Jenkins CLI and create job
-echo "⬇️ Downloading Jenkins CLI..."
-JENKINS_CLI_JAR="jenkins-cli.jar"
-JENKINS_ADMIN_PWD="admin123"
+# Download Jenkins CLI and create job manually after login
+cat <<INFO
 
-# Forward port in background
-sudo /usr/local/bin/kubectl port-forward svc/jenkins -n jenkins 8080:8080 &
-sleep 20
+⚠️ Port-forwarding was skipped. To complete setup manually:
 
-# Download CLI
-curl -O http://localhost:8080/jnlpJars/jenkins-cli.jar || echo "⚠️ Could not download Jenkins CLI. Jenkins may not be ready."
+1. Run:
+   kubectl port-forward svc/jenkins -n jenkins 8080:8080
 
-# Create the job (may fail silently if Jenkins is still initializing)
-echo "📌 Creating Jenkins freestyle job..."
-java -jar jenkins-cli.jar -s http://localhost:8080/ -auth admin:$JENKINS_ADMIN_PWD create-job hello-world < hello-job.xml || echo "⚠️ Could not create job, Jenkins might not be ready."
+2. Download Jenkins CLI:
+   curl -O http://localhost:8080/jnlpJars/jenkins-cli.jar
+
+3. Create the job (if not exists):
+   java -jar jenkins-cli.jar -s http://localhost:8080/ -auth admin:admin123 get-job hello-world || \
+   java -jar jenkins-cli.jar -s http://localhost:8080/ -auth admin:admin123 create-job hello-world < hello-job.xml
+
+INFO
 
 # Done!
-echo "✅ Jenkins setup complete with a Hello World job."
+echo "✅ Jenkins setup complete with a Hello World job (manual port-forward required)."
