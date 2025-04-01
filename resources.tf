@@ -329,7 +329,7 @@ resource "aws_instance" "k3s_nodev2" {
   key_name                    = "macKeyPair"
   associate_public_ip_address = true
 
-  user_data = file("jenkins_user_data.sh")
+  /* user_data = file("jenkins_user_data.sh") */
 
   tags = {
     Name = "k3sNode-Jenkins"
