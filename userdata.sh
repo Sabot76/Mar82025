@@ -1,29 +1,26 @@
+#!/bin/bash
 
-    #!/bin/bash
-    # Update system and install basic tools
-    sudo apt-get update -y
-    sudo apt-get upgrade -y
-    sudo apt-get install -y curl unzip apt-transport-https
+# Update the system
+apt-get update -y
+apt-get upgrade -y
 
-    # Install k3s
-    curl -sfL https://get.k3s.io | sh -
-    export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+# Install required tools
+apt-get install -y curl unzip apt-transport-https software-properties-common
 
-    # Install Helm
-    curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+# Install k3s
+curl -sfL https://get.k3s.io | sh -
 
-    # Add Jenkins Helm repo and update
-    helm repo add jenkins https://charts.jenkins.io
-    helm repo update
+# Fix permissions on kubeconfig
+sudo chmod 644 /etc/rancher/k3s/k3s.yaml
 
-    # Wait until Kubernetes is ready
-    until kubectl get nodes; do sleep 5; done
-    sleep 30
+# Set KUBECONFIG for current session
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 
-    # Create namespace for Jenkins
-    kubectl create namespace jenkins
+# Also set it system-wide for all future logins
+echo 'export KUBECONFIG=/etc/rancher/k3s/k3s.yaml' >> /etc/profile
 
-    # Install Jenkins with LoadBalancer service
-    helm install jenkins jenkins/jenkins \
-      --namespace jenkins \
-      --set controller.serviceType=LoadBalancer
+# Optional: wait a bit to make sure cluster is ready
+sleep 30
+
+# Install Helm
+curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash

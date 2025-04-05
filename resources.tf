@@ -279,11 +279,12 @@ data "aws_ami" "ubuntu" {
 
 # Bastion Host EC2
 resource "aws_instance" "bastion" {
-  ami                    = data.aws_ami.amazon_linux.id
+  ami                    = data.aws_ami.ubuntu.id
   instance_type          = "t2.micro"
   subnet_id              = aws_subnet.public_subnet_a.id
   vpc_security_group_ids = [aws_security_group.public_sg.id]
   key_name               = "macKeyPair"
+  user_data              = file("userdata.sh")
 
   source_dest_check = false
 
@@ -293,7 +294,7 @@ resource "aws_instance" "bastion" {
 }
 
 
-resource "aws_instance" "k3s_nodev2" {
+/* resource "aws_instance" "k3s_nodev2" {
   ami                         = data.aws_ami.ubuntu.id
   instance_type               = "t2.small"
   subnet_id                   = aws_subnet.public_subnet_a.id
@@ -305,4 +306,4 @@ resource "aws_instance" "k3s_nodev2" {
   tags = {
     Name = "k3sNode-Jenkins"
   }
-}
+} */
