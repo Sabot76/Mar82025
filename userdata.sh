@@ -10,6 +10,12 @@ apt-get install -y curl unzip apt-transport-https software-properties-common
 # Install k3s
 curl -sfL https://get.k3s.io | sh -
 
+# Wait for kubeconfig file to be created
+while [ ! -f /etc/rancher/k3s/k3s.yaml ]; do
+  echo "Waiting for k3s.yaml to be created..."
+  sleep 2
+done
+
 # Fix permissions on kubeconfig
 sudo chmod 644 /etc/rancher/k3s/k3s.yaml
 
