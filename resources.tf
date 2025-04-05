@@ -277,7 +277,7 @@ data "aws_ami" "ubuntu" {
 
 
 
-/* # Bastion Host EC2
+# Bastion Host EC2
 resource "aws_instance" "bastion" {
   ami                    = data.aws_ami.amazon_linux.id
   instance_type          = "t2.micro"
@@ -290,36 +290,8 @@ resource "aws_instance" "bastion" {
   tags = {
     Name = "BastionHost"
   }
-} */
+}
 
-
-/* resource "aws_instance" "public_ec2" {
-  ami                         = data.aws_ami.amazon_linux.id
-  instance_type               = "t2.micro"
-  subnet_id                   = aws_subnet.public_subnet_a.id
-  associate_public_ip_address = true
-  vpc_security_group_ids      = [aws_security_group.public_sg.id]
-  key_name                    = "macKeyPair"
-
-  tags = {
-    Name = "Public-Test-Instance"
-  }
-} */
-
-
-/* resource "aws_instance" "k3s_node" {
-  ami                         = data.aws_ami.ubuntu.id
-  instance_type               = "t2.micro"
-  subnet_id                   = aws_subnet.public_subnet_a.id
-  vpc_security_group_ids      = [aws_security_group.public_sg.id]
-  key_name                    = "macKeyPair"
-  associate_public_ip_address = true # Important! Ensures public IP
-
-  tags = {
-    Name = "K3sNode"
-  }
-
-} */
 
 resource "aws_instance" "k3s_nodev2" {
   ami                         = data.aws_ami.ubuntu.id
@@ -329,8 +301,7 @@ resource "aws_instance" "k3s_nodev2" {
   key_name                    = "macKeyPair"
   associate_public_ip_address = true
 
-  /* user_data = file("jenkins_user_data.sh") */
-
+  user_data = file("userdata.sh")
   tags = {
     Name = "k3sNode-Jenkins"
   }
